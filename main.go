@@ -1,19 +1,17 @@
 package main
 
-
-
 // (0) libraries
 import (
 	"fmt"
+	"runtime"
+
 	// "bufio"
 	"os"
 	// "strings"
 	// "io/ioutil"
-	// "math/rand"   
+	// "math/rand"
 	// "time"
 )
-
-
 
 // (1) ojects
 type Control_Object struct {
@@ -22,9 +20,7 @@ type Control_Object struct {
 
 type Data_Object struct {
 	data_files []string
-
 }
-
 
 // ======================================================================================
 // (2) main
@@ -35,9 +31,13 @@ func main() {
 	data_set := Data_Object{}
 
 	// set directory for data files, this will be set later on another way
-	dir := "/home/lutz/test"
-	
-
+	var dir string
+	if runtime.GOOS == "windows" {
+		dir = "c:\\tmp"
+	} else {
+		dir = "/home/lutz/test"
+	}
+	fmt.Println("directory setting: ", dir)
 
 	// get control flag stored in control file and save in object
 	ctrl, err := readControlFile("control.txt")
@@ -47,8 +47,6 @@ func main() {
 	}
 	ctrl_obj.Ctrl = ctrl
 	fmt.Printf("ctrl keyword: %s\n", ctrl_obj.Ctrl)
-	
-
 
 	// case handler
 	// - FEED        - which calls to feed the database
@@ -64,18 +62,15 @@ func main() {
 		}
 		data_set.data_files = files
 
-        for i, file := range files {
-            fmt.Printf("%d: %s\n", i+1, file)
-        }
-
-
+		for i, file := range files {
+			fmt.Printf("%d: %s\n", i+1, file)
+		}
 
 		getDataFields(files)
 
 	case "CONTENT":
 		fmt.Println("CONTENT is active")
 	}
-
 
 }
 

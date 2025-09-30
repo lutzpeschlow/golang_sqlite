@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 	// "io/ioutil"
 )
 
-// readControlFile 
+// readControlFile
 func readControlFile(filename string) (string, error) {
 	// file and error object after reading file
 	file, err := os.Open(filename)
@@ -16,7 +16,7 @@ func readControlFile(filename string) (string, error) {
 		return "", fmt.Errorf("ERROR reading control file: %v", err)
 	}
 	defer file.Close()
-    // read file content
+	// read file content
 	scanner := bufio.NewScanner(file)
 	if scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -24,11 +24,8 @@ func readControlFile(filename string) (string, error) {
 		if line == "FEED" || line == "CONTENT" {
 			return line, nil
 		} else {
-			return "", fmt.Errorf("missing valid control keywords   FEED oder CONTENT", line)
+			return "", fmt.Errorf("missing valid control keywords   FEED oder CONTENT")
 		}
 	}
 	return "", fmt.Errorf("ERROR: control file is empty")
 }
-
-
-
