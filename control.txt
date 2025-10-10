@@ -1,2 +1,3 @@
-FEED
+ACTION FEED
+DATALOC c:\tmp
 

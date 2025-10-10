@@ -2,30 +2,36 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strings"
 	// "io/ioutil"
 )
 
 // readControlFile
-func readControlFile(filename string) (string, error) {
-	// file and error object after reading file
-	file, err := os.Open(filename)
+func ReadControlFile(path string, obj *Control_Object) error {
+	// Defaults
+	obj.Action = "FEED"
+	obj.DataDir = "."
+	// get file
+	file, err := os.Open(path)
 	if err != nil {
-		return "", fmt.Errorf("ERROR reading control file: %v", err)
+		return err
 	}
 	defer file.Close()
-	// read file content
+	// read content from file object and scan
 	scanner := bufio.NewScanner(file)
-	if scanner.Scan() {
+	for scanner.Scan() {
+		// trim and split the line
 		line := strings.TrimSpace(scanner.Text())
-		// check possible keywords
-		if line == "FEED" || line == "CONTENT" {
-			return line, nil
-		} else {
-			return "", fmt.Errorf("missing valid control keywords   FEED oder CONTENT")
+		parts := strings.Fields(line)
+		if len(parts) >= 2 {
+			switch parts[0] {
+			case "ACTION":
+				obj.Action = parts[1]
+			case "DATALOC":
+				obj.DataDir = parts[1]
+			}
 		}
 	}
-	return "", fmt.Errorf("ERROR: control file is empty")
+	return scanner.Err()
 }

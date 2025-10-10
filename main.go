@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	// "gorm.io/driver/sqlite"
+	// "gorm.io/gorm"
 	// "strings"
 	// "io/ioutil"
 	// "math/rand"
@@ -14,7 +16,8 @@ import (
 
 // (1) ojects
 type Control_Object struct {
-	Ctrl string
+	Action  string
+	DataDir string
 }
 
 type Model struct {
@@ -33,6 +36,21 @@ type File struct {
 	Name string
 }
 
+func writeDb(db_name string, model *Model) error {
+	fmt.Println("write db ...")
+	fmt.Println(db_name)
+	// connect SQLite DB
+	// db, err := gorm.Open(sqlite.Open(db_name), &gorm.Config{})
+	// if err != nil {
+	// 	panic("failed to connect database")
+	// }
+	// err = db.AutoMigrate(&File{}, &Result{})
+	// if err != nil {
+	// 	panic("migration failed")
+	// }
+	// return err
+}
+
 // ======================================================================================
 // (2) main
 // ======================================================================================
@@ -41,37 +59,33 @@ func main() {
 	ctrl_obj := Control_Object{}
 	mod_obj := Model{}
 
-	// set directory for data files, this will be set later on another way
-	var dir string
-	if runtime.GOOS == "windows" {
-		dir = "c:\\tmp"
-	} else {
-		dir = "/home/lutz/test"
-	}
-	fmt.Println("directory setting: ", dir)
+	var db_name string
+	db_name = "g.db"
+	// system check
+	fmt.Println(runtime.GOOS)
 
 	// get control flag stored in control file and save in object
-	ctrl, err := readControlFile("control.txt")
+	err := ReadControlFile("control.txt", &ctrl_obj)
 	if err != nil {
 		fmt.Printf(" %v\n", err)
 		os.Exit(1)
 	}
-	ctrl_obj.Ctrl = ctrl
-	fmt.Printf("ctrl keyword: %s\n", ctrl_obj.Ctrl)
+	// content of control object
+	fmt.Println("Settings:")
+	fmt.Printf(" action: %s\n", ctrl_obj.Action)
+	fmt.Printf(" datadir: %s\n", ctrl_obj.DataDir)
 
 	// case handler
 	// - FEED        - which calls to feed the database
 	// - CONTENT     - get content of the database
-	switch ctrl_obj.Ctrl {
+	switch ctrl_obj.Action {
 	case "FEED":
-		fmt.Println("FEED is active")
-
-		err := getData(dir, &mod_obj)
+		err := getData(ctrl_obj.DataDir, &mod_obj)
 		if err != nil {
 			fmt.Printf("Fehler: %v\n", err)
 			return
+			err := writeDb(db_name, &mod_obj)
 		}
-
 	case "CONTENT":
 		fmt.Println("CONTENT is active")
 	}
