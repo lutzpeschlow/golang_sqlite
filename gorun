@@ -1,2 +1,0 @@
-go run main.go utils.go read_data.go
-

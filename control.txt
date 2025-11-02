@@ -1,3 +1,5 @@
 ACTION FEED
-DATALOC c:\tmp
+DATALOC_LINUX /tmp
+DATALOC_WIN c:\tmp
+DBNAME sqlite.db
 
