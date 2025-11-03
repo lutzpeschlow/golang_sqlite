@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	// "gorm.io/driver/sqlite"
 	// "gorm.io/gorm"
+	// "gorm.io/driver/sqlite"
 	// "strings"
 	// "io/ioutil"
 	// "math/rand"
@@ -149,6 +149,10 @@ func getData(dir string, model *Model) error {
 	return err
 }
 
+// ===== write data from model object to sqlite database ======================
+//
+// using gorm so write to sqlite
+// the objects are already adapted for direct export to sqlite
 func writeDb(db_name string, model *Model) error {
 	fmt.Println("write db ...")
 	fmt.Println(db_name)
@@ -204,18 +208,16 @@ func main() {
 		fmt.Println("CONTENT is active")
 	}
 
-	// content of files
+	// content of files as one attribute of model object
 	fmt.Println("Files:")
 	for _, file := range mod_obj.Files {
 		fmt.Printf("ID: %d, Name: %s\n", file.ID, file.Name)
 	}
-	// content of results
+	// content of results as another attribute of model object
 	fmt.Println("\nResults:")
 	for _, result := range mod_obj.Results {
 		fmt.Printf("ID: %d, Score: %d, FileID: %d\n", result.ID, result.Score, result.FileID)
 	}
 }
 
-// TDL:
-// - build object  data_set
-// - include data reader
+// ============================================================================
