@@ -9,8 +9,9 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	// "gorm.io/gorm"
-	// "gorm.io/driver/sqlite"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	// "strings"
 	// "io/ioutil"
 	// "math/rand"
@@ -157,16 +158,29 @@ func writeDb(db_name string, model *Model) error {
 	fmt.Println("write db ...")
 	fmt.Println(db_name)
 	// connect SQLite DB
-	// db, err := gorm.Open(sqlite.Open(db_name), &gorm.Config{})
-	// if err != nil {
-	// 	panic("failed to connect database")
-	// }
-	// err = db.AutoMigrate(&File{}, &Result{})
-	// if err != nil {
-	// 	panic("migration failed")
-	// }
+	db, err := gorm.Open(sqlite.Open(db_name), &gorm.Config{})
+	if err != nil {
+		return err
+	}
+	// automatic migration of tables for file and result attributes
+	err = db.AutoMigrate(&File{}, &Result{})
+	if err != nil {
+		return err
+	}
+	// save files
+	for _, file := range model.Files {
+		if err := db.Create(&file).Error; err != nil {
+			return err
+		}
+	}
+	// save results
+	for _, result := range model.Results {
+		if err := db.Create(&result).Error; err != nil {
+			return err
+		}
+	}
+	fmt.Println("Database write completed.")
 	return nil
-
 }
 
 // ======================================================================================
@@ -203,6 +217,10 @@ func main() {
 			fmt.Printf("Fehler: %v\n", err)
 			return
 			// err := writeDb(db_name, &mod_obj)
+		}
+		err = writeDb(ctrl_obj.DbName, &mod_obj)
+		if err != nil {
+			fmt.Printf("error writing db: %v\n", err)
 		}
 	case "CONTENT":
 		fmt.Println("CONTENT is active")
