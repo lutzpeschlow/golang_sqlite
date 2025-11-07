@@ -35,6 +35,7 @@ type Model struct {
 
 type Result struct {
 	ID     uint `gorm:"primaryKey"`
+	Number int
 	Score  int
 	FileID int
 }
@@ -46,21 +47,39 @@ type File struct {
 
 // ===== planned package: pkg =================================================
 //
-// readControlFile
+// # ReadControlFile
+//
+// function to read a control file that contains values for the tool
+// what action should be made
+// where are the data
+// what should be the name of the sqlite database
+//
+// input:
+//
+//	path - file name as string
+//	control_object - pointer to control_object
+//	osname - type of operating system
+//
+// output:
+//
+//	error - error value
 func ReadControlFile(path string, obj *Control_Object, osName string) error {
 	// Defaults
 	obj.Action = "FEED"
 	obj.DataDir = "."
-	// get file
+	// pointer to file for later opening, err as interface value
 	file, err := os.Open(path)
+	// if we have an error go out with returning err value
 	if err != nil {
 		return err
 	}
+	// close file at the end of the function
 	defer file.Close()
 	// read content from file object and scan
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		// trim and split the line
+		// parts is a slice of strings (dynamical array)
 		line := strings.TrimSpace(scanner.Text())
 		parts := strings.Fields(line)
 		if len(parts) >= 2 {
@@ -80,6 +99,7 @@ func ReadControlFile(path string, obj *Control_Object, osName string) error {
 			}
 		}
 	}
+	// return value is the error interface value of the scanner
 	return scanner.Err()
 }
 
@@ -90,6 +110,7 @@ func getData(dir string, model *Model) error {
 	// variables
 	var file_count int = 0
 	var res_count int = 0
+	var line_count int = 0
 	var dataFiles []string
 	fmt.Println(" get data file list ... ", dir)
 
@@ -135,12 +156,16 @@ func getData(dir string, model *Model) error {
 		file_count = file_count + 1
 		// content of file into result objects
 		scanner := bufio.NewScanner(file)
+		line_count = 0
 		fmt.Printf("... reading %s\n", fname)
 		for scanner.Scan() {
 			// fmt.Println(scanner.Text())
 			res_count = res_count + 1
+			line_count = line_count + 1
 			res_value, _ := strconv.Atoi(scanner.Text())
+
 			r := Result{ID: uint(res_count),
+				Number: line_count,
 				Score:  res_value,
 				FileID: file_count}
 			model.Results = append(model.Results, r)
