@@ -8,10 +8,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// ===== write data from model object to sqlite database ======================
+// WriteDb function to write data into sqlite database
 //
-// using gorm so write to sqlite
-// the objects are already adapted for direct export to sqlite
+// input:
+//   - db_name: as name of the database
+//   - model: pointer to model_object
+//
+// output:
+//   - err
 func WriteDb(db_name string, model *Model) error {
 	var dbExist bool
 	var files []File
@@ -39,6 +43,7 @@ func WriteDb(db_name string, model *Model) error {
 		}
 		fmt.Printf(" number of filenames found: %d\n", len(files))
 		fmt.Println("no further data written")
+
 	} else {
 		// automatic migration of tables for file and result attributes
 		err = db.AutoMigrate(&File{}, &Result{})

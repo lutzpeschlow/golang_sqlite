@@ -26,7 +26,15 @@ type File struct {
 	Name string
 }
 
-// get data
+// GetData function to read data from pre-defined directory from files
+// including  data  in file name
+//
+// input:
+//   - dir: pre-defined directoy
+//   - model: pointer to model_object
+//
+// output:
+//   - err
 func GetData(dir string, model *Model) error {
 	// variables
 	var file_count int = 0
@@ -36,7 +44,6 @@ func GetData(dir string, model *Model) error {
 	fmt.Println(" get data file list ... ", dir)
 
 	// list of all files in directory dir
-
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("ERROR %v", err)

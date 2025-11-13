@@ -61,6 +61,7 @@ func main() {
 		err = io.WriteDb(ctrl_obj.DbName, &mod_obj)
 		if err != nil {
 			fmt.Printf("error writing db: %v\n", err)
+
 		}
 	case "CONTENT":
 		fmt.Println("CONTENT is active")

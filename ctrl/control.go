@@ -15,7 +15,7 @@ type Control_Object struct {
 
 // ReadControlFile function to read a control file from path and
 // fills the values into object Control_Object. osName defines the operating
-// system and can be used for platform dependent actions or settings
+// system and can be used for platform dependent actions or settings.
 //
 // input:
 //   - path: file name as string
