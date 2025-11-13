@@ -17,50 +17,26 @@ import (
 	// "math/rand"
 	// "time"
 	// "bufio"
-	"github.com/lutzpeschlow/golang_sqlite/control"
-	// "github.com/lutzpeschlow/golang_sqlite/readdata"
+	// "github.com/lutzpeschlow/golang_sqlite/ctrl"
+	// "github.com/lutzpeschlow/golang_sqlite/io"
+	"github.com/lutzpeschlow/golang_sqlite/ctrl"
+	"github.com/lutzpeschlow/golang_sqlite/io"
 )
-
-// ========== object declaration ==============================================
-//
-// (1) ojects
-type Control_Object struct {
-	Action  string
-	DataDir string
-	DbName  string
-}
-
-type Model struct {
-	Files   []File
-	Results []Result
-}
-
-type Result struct {
-	ID     uint `gorm:"primaryKey"`
-	Number int
-	Score  int
-	FileID int
-}
-
-type File struct {
-	ID   uint `gorm:"primaryKey"`
-	Name string
-}
 
 // ======================================================================================
 // (2) main
 // ======================================================================================
 func main() {
 	// instance of objects
-	ctrl_obj := Control_Object{}
-	mod_obj := Model{}
+	ctrl_obj := ctrl.Control_Object{}
+	mod_obj := io.Model{}
 
 	// system check
 	osName := runtime.GOOS
 	fmt.Println(osName)
 
 	// get control flag stored in control file and save in object
-	err := control.ReadControlFile("control.txt", &ctrl_obj, osName)
+	err := ctrl.ReadControlFile("control.txt", &ctrl_obj, osName)
 	if err != nil {
 		fmt.Printf(" %v\n", err)
 		os.Exit(1)
@@ -76,13 +52,13 @@ func main() {
 	// - CONTENT     - get content of the database
 	switch ctrl_obj.Action {
 	case "FEED":
-		err := readdata.getData(ctrl_obj.DataDir, &mod_obj)
+		err := io.GetData(ctrl_obj.DataDir, &mod_obj)
 		if err != nil {
 			fmt.Printf("Fehler: %v\n", err)
 			return
 			// err := writeDb(db_name, &mod_obj)
 		}
-		err = writedata.writeDb(ctrl_obj.DbName, &mod_obj)
+		err = io.WriteDb(ctrl_obj.DbName, &mod_obj)
 		if err != nil {
 			fmt.Printf("error writing db: %v\n", err)
 		}
