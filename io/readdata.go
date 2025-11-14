@@ -13,11 +13,20 @@ import (
 	"gorm.io/gorm"
 )
 
+// ============================================================================
+// objects:
+
+// common model object containing:
+// - Files
+// - Results
+// as two lists of objects
 type Model struct {
 	Files   []File
 	Results []Result
 }
 
+// result object contains the numbers itself
+// referencing to the data file
 type Result struct {
 	ID     uint `gorm:"primaryKey"`
 	Number int
@@ -25,35 +34,118 @@ type Result struct {
 	FileID int
 }
 
+// file object saves the file name which
+// was source of the data stored later in result object
 type File struct {
 	ID   uint `gorm:"primaryKey"`
 	Name string
 }
 
+// dbcontent as short storage report object to see what
+// is already saved in the sqlite database
 type DbContent struct {
 	FileNames    []string
-	LastFileID   int
-	LastResultID int
+	LastFileID   uint
+	LastResultID uint
 }
 
+// ============================================================================
+// functions
+
+// debugPrintoutDbontent function for debug printout of dbcontent object
+func debugPrintoutDbontent(obj *DbContent) {
+	fmt.Print("debug printout of dbcontent: \n")
+	fmt.Print(" ", obj.FileNames, " ", obj.LastFileID, " ", obj.LastResultID, "\n")
+}
+
+// findMaxID function to find a max id in an integer array of uint
+func findMaxID(ids []uint) uint {
+	var return_value uint
+	if len(ids) == 0 {
+		return 0
+	}
+	return_value = ids[0]
+	for _, id := range ids {
+		if id > return_value {
+			return_value = id
+		}
+	}
+	return return_value
+}
+
+// ReadDbInfo function is reading a possible existing sqlite database
+// and stores some significant information for later usage in the
+// dbcontent object
+//
+// input:
+//   - db_name: string
+//   - dbcontent: as pointer to object dbcontent
+//
+// output:
+//   - error
 func ReadDbInfo(db_name string, dbcontent *DbContent) error {
+	// variables
 	var files []File
+	var results []Result
+
+	// open sqlite database
 	fmt.Println("check db content ...")
 	db, err := gorm.Open(sqlite.Open(db_name), &gorm.Config{})
 	if err != nil {
 		return err
 	}
 
+	// save close database - defer mode
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	defer sqlDB.Close()
+
+	// read file information from sqlite using automatic gorm data assignment
+	// executes sql command:  SELECT * FROM files;
 	if err := db.Find(&files).Error; err != nil {
 		return err
 	}
-	fmt.Printf(" number of filenames found: %d\n", len(files))
-	fmt.Println("no further data written")
+	fmt.Print("number of filenames found: ", len(files), "\n")
+	// Create slices with exact capacity
+	file_ids := make([]uint, len(files))
+	filenames := make([]string, len(files))
+	// Loop and assign directly by index
+	for i, file := range files {
+		file_ids[i] = file.ID
+		filenames[i] = file.Name
+	}
+	fmt.Print(" ", file_ids, " ", filenames, "\n")
+	// write data into dbcontent object
+	dbcontent.FileNames = filenames
+	dbcontent.LastFileID = findMaxID(file_ids)
+
+	// read result information from sqlite
+	if err := db.Find(&results).Error; err != nil {
+		return err
+	}
+	fmt.Printf("number of results found: %d\n", len(results))
+	// slice with exact length and find max value
+	res_ids := make([]uint, len(results))
+	for i, result := range results {
+		res_ids[i] = result.ID
+	}
+	dbcontent.LastResultID = findMaxID(res_ids)
+	fmt.Print(" ", dbcontent.FileNames, " ", dbcontent.LastFileID, " ", dbcontent.LastResultID, "\n")
+
+	// return error value
 	return err
 }
 
 // GetData function to read data from pre-defined directory from files
-// including  data  in file name
+// including  *data*  in file name
+// the directory is delivered in control object
+//
+// before reading the data files a base of already existing data
+// in possible existing sqlite database is checked
+//
+// if there is duplicate data, the new read data is reduced accordingly
 //
 // input:
 //   - dir: pre-defined directoy
@@ -74,10 +166,10 @@ func GetData(ctrl *ctrl.Control_Object, model *Model) error {
 	if err != nil {
 		return fmt.Errorf("ERROR %v", err)
 	}
+	debugPrintoutDbontent(&dbcontent)
 
-	fmt.Println(" get data file list ... ", ctrl.DataDir)
-
-	// list of all files in directory dir
+	// get a list of all files in directory
+	fmt.Println("get data file list in dir... ", ctrl.DataDir)
 	files, err := os.ReadDir(ctrl.DataDir)
 	if err != nil {
 		return fmt.Errorf("ERROR %v", err)
@@ -88,7 +180,6 @@ func GetData(ctrl *ctrl.Control_Object, model *Model) error {
 		if !file.IsDir() {
 			// get file name itself
 			filename := file.Name()
-			// fmt.Println(filename)
 			// starts with "data" and ends with ".txt"
 			if strings.HasPrefix(filename, "data") && strings.HasSuffix(filename, ".txt") {
 				dataFiles = append(dataFiles, filename)
@@ -97,11 +188,10 @@ func GetData(ctrl *ctrl.Control_Object, model *Model) error {
 	}
 	fmt.Printf(" number of data files found: %d\n", len(dataFiles))
 
-	// feed the object content
+	// feed the files object content
 	for i, file := range dataFiles {
-		fmt.Printf("%d: %s\n", i+1, file)
-		f := File{ID: uint(i + 1),
-			Name: file}
+		fmt.Print("   ", i+1, " ", file, "\n")
+		f := File{ID: uint(i + 1), Name: file}
 		model.Files = append(model.Files, f)
 	}
 
@@ -119,9 +209,7 @@ func GetData(ctrl *ctrl.Control_Object, model *Model) error {
 		// content of file into result objects
 		scanner := bufio.NewScanner(file)
 		line_count = 0
-		fmt.Printf("... reading %s\n", fname)
 		for scanner.Scan() {
-			// fmt.Println(scanner.Text())
 			res_count = res_count + 1
 			line_count = line_count + 1
 			res_value, _ := strconv.Atoi(scanner.Text())
