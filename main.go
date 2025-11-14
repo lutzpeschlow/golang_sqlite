@@ -2,23 +2,10 @@ package main
 
 // (0) libraries
 import (
-	// "bufio"
 	"fmt"
 	"os"
-
-	// "path/filepath"
 	"runtime"
-	// "strconv"
-	// "strings"
-	// "gorm.io/driver/sqlite"
-	// "gorm.io/gorm"
-	// "strings"
-	// "io/ioutil"
-	// "math/rand"
-	// "time"
-	// "bufio"
-	// "github.com/lutzpeschlow/golang_sqlite/ctrl"
-	// "github.com/lutzpeschlow/golang_sqlite/io"
+
 	"github.com/lutzpeschlow/golang_sqlite/ctrl"
 	"github.com/lutzpeschlow/golang_sqlite/io"
 )
@@ -52,7 +39,7 @@ func main() {
 	// - CONTENT     - get content of the database
 	switch ctrl_obj.Action {
 	case "FEED":
-		err := io.GetData(ctrl_obj.DataDir, &mod_obj)
+		err := io.GetData(&ctrl_obj, &mod_obj)
 		if err != nil {
 			fmt.Printf("Fehler: %v\n", err)
 			return

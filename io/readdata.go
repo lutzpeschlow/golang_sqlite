@@ -7,6 +7,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/lutzpeschlow/golang_sqlite/ctrl"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type Model struct {
@@ -26,6 +30,28 @@ type File struct {
 	Name string
 }
 
+type DbContent struct {
+	FileNames    []string
+	LastFileID   int
+	LastResultID int
+}
+
+func ReadDbInfo(db_name string, dbcontent *DbContent) error {
+	var files []File
+	fmt.Println("check db content ...")
+	db, err := gorm.Open(sqlite.Open(db_name), &gorm.Config{})
+	if err != nil {
+		return err
+	}
+
+	if err := db.Find(&files).Error; err != nil {
+		return err
+	}
+	fmt.Printf(" number of filenames found: %d\n", len(files))
+	fmt.Println("no further data written")
+	return err
+}
+
 // GetData function to read data from pre-defined directory from files
 // including  data  in file name
 //
@@ -35,16 +61,24 @@ type File struct {
 //
 // output:
 //   - err
-func GetData(dir string, model *Model) error {
+func GetData(ctrl *ctrl.Control_Object, model *Model) error {
 	// variables
 	var file_count int = 0
 	var res_count int = 0
 	var line_count int = 0
 	var dataFiles []string
-	fmt.Println(" get data file list ... ", dir)
+	dbcontent := DbContent{}
+
+	// check db content for possible later data reduction
+	err := ReadDbInfo(ctrl.DbName, &dbcontent)
+	if err != nil {
+		return fmt.Errorf("ERROR %v", err)
+	}
+
+	fmt.Println(" get data file list ... ", ctrl.DataDir)
 
 	// list of all files in directory dir
-	files, err := os.ReadDir(dir)
+	files, err := os.ReadDir(ctrl.DataDir)
 	if err != nil {
 		return fmt.Errorf("ERROR %v", err)
 	}
@@ -73,7 +107,7 @@ func GetData(dir string, model *Model) error {
 
 	for _, fname := range dataFiles {
 		// create full path and filename
-		fullPath := filepath.Join(dir, fname)
+		fullPath := filepath.Join(ctrl.DataDir, fname)
 		file, err := os.Open(fullPath)
 		if err != nil {
 			fmt.Printf("ERROR: opening %s: %v\n", fullPath, err)
