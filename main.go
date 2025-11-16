@@ -29,6 +29,7 @@ func main() {
 	// instance of objects
 	ctrl_obj := ctrl.Control_Object{}
 	mod_obj := io.Model{}
+	db_content := io.DbContent{}
 
 	// system check
 	osName := runtime.GOOS
@@ -55,13 +56,19 @@ func main() {
 			return
 		}
 		// write data into sqlite database
-		// err = io.WriteDb(ctrl_obj.DbName, &mod_obj)
-		// if err != nil {
-		// 	fmt.Printf("error writing db: %v\n", err)
-		//
-		// }
+		err = io.WriteDb(ctrl_obj.DbName, &mod_obj)
+		if err != nil {
+			fmt.Printf("error writing db: %v\n", err)
+		}
 	case "CONTENT":
 		fmt.Println("CONTENT is active")
+		fmt.Print(" read db info ... \n")
+		err = io.ReadDbInfo(ctrl_obj.DbName, &db_content)
+		if err != nil {
+			fmt.Printf("Fehler: %v\n", err)
+			return
+		}
+		io.DebugPrintoutDbontent(&db_content)
 	}
 
 	// content of files as one attribute of model object
